@@ -173,11 +173,11 @@ fi
 
 # Functions
 printf_n(){ printf "$1\n" "${@:2}"; }
-client() { ./massa-client -p "$massa_password"; }
+client() { ./massa-client -p ""; }
 node_info() {
-	local wallet_info=`./massa-client -p "$massa_password" -j wallet_info`
+	local wallet_info=`./massa-client -p "" -j wallet_info`
 	local main_address=`jq -r "[.[]] | .[0].address_info.address" <<< "$wallet_info"`
-	local node_info=`./massa-client -p "$massa_password" -j get_status | jq`
+	local node_info=`./massa-client -p "" -j get_status | jq`
 	if [ "$raw_output" = "true" ]; then
 		printf_n "$node_info"
 	else
@@ -188,7 +188,7 @@ node_info() {
 		
 		local current_cycle=`jq -r ".current_cycle" <<< "$node_info"`
 		printf_n "$t_ni3" "$current_cycle"
-		#local draws_count=`./massa-client -p "$massa_password" -j get_addresses "$main_address" | jq -r ".[0].block_draws | length" 2>/dev/null`
+		#local draws_count=`./massa-client -p "" -j get_addresses "$main_address" | jq -r ".[0].block_draws | length" 2>/dev/null`
 		#if [ -n "$draws_count" ] && [ "$draws_count" -gt 0 ]; then
 		#	printf_n "$t_ni4" "$draws_count"
 		#else
@@ -210,12 +210,12 @@ node_info() {
 	fi
 }
 wallet_info() {
-	local wallet_info=`./massa-client -p "$massa_password" -j wallet_info`
+	local wallet_info=`./massa-client -p "" -j wallet_info`
 	local main_address=`jq -r "[.[]] | .[0].address_info.address" <<< "$wallet_info"`
 	if [ "$raw_output" = "true" ]; then
 		printf_n "`jq -r "[.[]]" <<< "$wallet_info"`"
 	else
-		local staking_addresses=`./massa-client -p "$massa_password" -j node_get_staking_addresses`
+		local staking_addresses=`./massa-client -p "" -j node_get_staking_addresses`
 		local wallets=`jq -r "to_entries[]" <<< "$wallet_info" | tr -d '[:space:]' | sed 's%}{%} {%g'`
 		printf_n
 		for wallet in $wallets; do
@@ -248,14 +248,14 @@ wallet_info() {
 	fi
 }
 buy_rolls() {
-	local wallet_info=`./massa-client -p "$massa_password" -j wallet_info`
+	local wallet_info=`./massa-client -p "" -j wallet_info`
 	local main_address=`jq -r "[.[]] | .[0].address_info.address" <<< "$wallet_info"`
 	local balance=`jq -r "[.[]] | .[-1].address_info.candidate_sequential_balance" <<< "$wallet_info"`
 	local roll_count=`printf "%d" $(bc -l <<< "$balance/100") 2>/dev/null`
 	if [ "$roll_count" -eq "0" ]; then
 		printf_n "$t_br1"
 	elif [ "$max_buy" = "true" ]; then
-		local resp=`./massa-client -p "$massa_password" buy_rolls "$main_address" "$roll_count" 0`
+		local resp=`./massa-client -p "" buy_rolls "$main_address" "$roll_count" 0`
 		if grep -q 'insuffisant balance' <<< "$resp"; then
 			printf_n "$t_br4"
 			return 1 2>/dev/null; exit 1
@@ -267,9 +267,9 @@ buy_rolls() {
 		local rolls_for_buy
 		read -r rolls_for_buy
 		if [ "$rolls_for_buy" -gt "$roll_count" ]; then
-			local resp=`./massa-client -p "$massa_password" buy_rolls "$main_address" "$roll_count" 0`
+			local resp=`./massa-client -p "" buy_rolls "$main_address" "$roll_count" 0`
 		else
-			local resp=`./massa-client -p "$massa_password" buy_rolls "$main_address" "$rolls_for_buy" 0`
+			local resp=`./massa-client -p "" buy_rolls "$main_address" "$rolls_for_buy" 0`
 		fi
 		if grep -q 'insuffisant balance' <<< "$resp"; then
 			printf_n "$t_br4"
@@ -280,9 +280,9 @@ buy_rolls() {
 	fi
 }
 node_add_staking_secret_keys() {
-	local wallet_info=`./massa-client -p "$massa_password" -j wallet_info`
+	local wallet_info=`./massa-client -p "" -j wallet_info`
 	local secret_key=`jq -r "[.[]] | .[0].keypair.secret_key" <<< "$wallet_info"`
-	local resp=`./massa-client -p "$massa_password" node_add_staking_secret_keys "$secret_key"`
+	local resp=`./massa-client -p "" node_add_staking_secret_keys "$secret_key"`
 	if grep -q "error" <<< "$resp"; then
 		printf_n "$t_rpk"
 	else
@@ -290,19 +290,19 @@ node_add_staking_secret_keys() {
 	fi
 }
 node_testnet_rewards_program_ownership_proof() {
-	local wallet_info=`./massa-client -p "$massa_password" -j wallet_info`
+	local wallet_info=`./massa-client -p "" -j wallet_info`
 	local main_address=`jq -r "[.[]] | .[0].address_info.address" <<< "$wallet_info"`
 	local discord_id
 	printf "$t_ctrp1"
 	read -r discord_id
-	local resp=`./massa-client -p "$massa_password" -j node_testnet_rewards_program_ownership_proof "$main_address" "$discord_id" | jq -r`
+	local resp=`./massa-client -p "" -j node_testnet_rewards_program_ownership_proof "$main_address" "$discord_id" | jq -r`
 	printf_n "$t_ctrp2" "$resp"
 }
 other() {
 	if [ "$raw_output" = "true" ]; then
-		local resp=`./massa-client -p "$massa_password" -j "$action" "$@" 2>&1`
+		local resp=`./massa-client -p "" -j "$action" "$@" 2>&1`
 	else
-		local resp=`./massa-client -p "$massa_password" "$action" "$@" 2>&1`
+		local resp=`./massa-client -p "" "$action" "$@" 2>&1`
 	fi
 	if grep -q 'error: Found argument' <<< "$resp"; then
 		printf_n "$t_err"
