@@ -323,7 +323,7 @@ if [ ! -n "$massa_password" ]; then
 	return 1 2>/dev/null; exit 1
 fi
 cd $HOME/massa/massa-client/
-if grep -q "wrong password" <<< `./massa-client -p "$massa_password" 2>&1`; then
+if grep -q "wrong password" <<< `./massa-client -p "" 2>&1`; then
 	printf_n "$t_err_wp"
 	return 1 2>/dev/null; exit 1
 fi
